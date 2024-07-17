@@ -1,3 +1,9 @@
+# NOT COMPLETE
+- Need to add instructions for using smtp with outlook
+- Need to add instructions for getting a twitch client/secret
+- Need to indicate you need an .env file
+
+
 # Personalized Twitch Stream Notifcation by Email
 I built this becuase I didn't want to download twitch on my phone (running low on storage) and I was setting up a home server on an old laptop, so I thought "why not run a script that sends me emails when certain streamers are live in a docker container".
 
