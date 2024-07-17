@@ -4,7 +4,7 @@ ADD /src .
 
 RUN pip install requests python-dotenv
 
-CMD ["python", "./main.py"]
+CMD ["python", "-u", "./main.py"]
 
 
 
