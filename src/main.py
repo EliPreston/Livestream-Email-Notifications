@@ -83,13 +83,10 @@ if __name__ == "__main__":
     load_dotenv()
     twitch_auth_token = getTwitchAuthToken()
 
+    # insert streamers here, 0 indicates offline, this should be what you start with
     streamers = {
-        "connoreatspants": 0,
-        "hasanabi": 0,
-        "bigguy": 0,
-        "schlatt": 0,
-        "fitz": 0,
-        "mf_ib": 0
+        "example": 0
+
     }
     
     try:
