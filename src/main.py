@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import time
 import os
 import smtplib
+from email.mime.text import MIMEText
 
 
 def getTwitchAuthToken():
@@ -50,8 +51,8 @@ def getStreamStatus(twitch_auth_token, twitch_userid):
     return streaminfo
 
 
-def sendEmailNotif(streamer, stream_title):
 
+def sendEmailNotif(notifcation_message):
     host = os.getenv('SMTP_HOST')
     port = os.getenv('HOST_PORT')
     smtp = smtplib.SMTP(host, port)
@@ -60,7 +61,11 @@ def sendEmailNotif(streamer, stream_title):
     from_pass = os.getenv('FROM_EMAIL_PASS')
     to_email = os.getenv('TO_EMAIL')
 
-    message = f"""Subject: {streamer} is live - {stream_title}"""
+    
+    msg = MIMEText(notifcation_message)
+    msg['Subject'] = "Livestream Notification(s)"
+    msg['From'] = from_email
+    msg['To'] = to_email
 
 
     status_code, response = smtp.ehlo()
@@ -72,52 +77,70 @@ def sendEmailNotif(streamer, stream_title):
     status_code, response = smtp.login(from_email, from_pass)
     print(f"[*] Logging in: {status_code} {response}")
 
-    smtp.sendmail(from_email, to_email, message)
+    smtp.sendmail(from_email, to_email, msg.as_string())
     smtp.quit()
+    print("Notification sent...")
 
 
 
 
 if __name__ == "__main__":
     
+    print("Starting livestream notification script...\n")
     load_dotenv()
     twitch_auth_token = getTwitchAuthToken()
 
     # insert streamers here, 0 indicates offline, this should be what you start with
     streamers = {
-        "example": 0
-
+        "example": 0,
     }
     
     try:
         while True:
             # os.system('cls||clear')
 
+            notifcation_message = ""
             for streamer in streamers:
+                try:
+                    streamer_id = getStreamerInfo(twitch_auth_token, streamer)
+                except BaseException as e:
+                    print(e.message)
+                    print(e.args)
                 
-                streamer_id = getStreamerInfo(twitch_auth_token, streamer)
-                streaminfo = getStreamStatus(twitch_auth_token, streamer_id)
-                # print(f'{streaminfo}')
-                
-                # if live and previously not live
-                if len(streaminfo['data']) > 0 and streamers[streamer] == 0:
-                    print(f'{streamer} is live')
-                    streamers[streamer] = 1
-                    sendEmailNotif(streaminfo['data'][0]['user_name'], streaminfo['data'][0]['title'])
+                try:
+                    streaminfo = getStreamStatus(twitch_auth_token, streamer_id)
+                    # print(f'{streaminfo}')
+                except BaseException as e:
+                    print(e.message)
+                    print(e.args)
 
-                # if not live and prevously live
-                elif len(streaminfo['data']) == 0 and streamers[streamer] == 1:
-                    streamers[streamer] = 0
-                    print(f'{streamer} was live and has gone offline')
-                    
-                # no change in stream status
-                else:
-                    print(f'no change to {streamer}\'s stream')
-                    pass
-                
-            print("")
+                try:
+                    # if live and previously not live
+                    if len(streaminfo['data']) > 0 and streamers[streamer] == 0:
+                        print(f'{streamer} is live')
+                        streamers[streamer] = 1
+                        notifcation_message += streaminfo['data'][0]['user_name'] + " is live:\n" + streaminfo['data'][0]['title'] + "\n\n"
+
+
+                    # if not live and prevously live
+                    elif len(streaminfo['data']) == 0 and streamers[streamer] == 1:
+                        streamers[streamer] = 0
+                        print(f'{streamer} was live and has gone offline')
+                        
+                    # no change in stream status
+                    else:
+                        print(f'no change to {streamer}\'s stream: {streamers[streamer]} -- (1 = live, 0 = offline)')
+                        pass
+                except BaseException as e:
+                    print(e.message)
+                    print(e.args)
+            
+            if len(notifcation_message) > 0:
+                sendEmailNotif(notifcation_message + "\n\n")
+            print("-------------------\n")
                 
             time.sleep(5)
     except KeyboardInterrupt:
+        print("Ending livestream notifcations...")
         pass
     

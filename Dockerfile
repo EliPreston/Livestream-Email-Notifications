@@ -2,7 +2,7 @@ FROM python:3.9
 
 ADD /src .
 
-RUN pip install requests python-dotenv
+RUN pip install requests python-dotenv email
 
 CMD ["python", "-u", "./main.py"]
 
